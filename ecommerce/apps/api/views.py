@@ -12,42 +12,98 @@ from apps.api.models import Product, Order
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
 from rest_framework import generics, mixins
-from rest_framework.permissions import IsAuthenticated, IsAdminUser
+from rest_framework.permissions import IsAuthenticated, IsAdminUser, AllowAny
 from rest_framework.views import APIView
 
-# Generic Views + Mixins
+# Classed based Views
 
 
-class ProductListApiView(
-    mixins.ListModelMixin,
-    generics.GenericAPIView,
-):
+class ProductListCreateApiView(generics.ListCreateAPIView):
+    """Class-based view for listing and creating products."""
+
     queryset = Product.objects.all()
     serializer_class = ProductSerializer
-    # permission_classes = [IsAuthenticated]
 
-    def get(self, request, *args, **kwargs):
-        return self.list(request, *args, **kwargs)
+    """Customising permission to allow only authenticated users to create products,
+    while allowing anyone to view the list of products.
+    """
+
+    def get_permissions(self):
+        self.permission_classes = [AllowAny]
+        if self.request.method == "POST":
+            self.permission_classes = [IsAdminUser]
+        return super().get_permissions()
 
 
-class ProductDetailApiView(generics.GenericAPIView, mixins.RetrieveModelMixin):
+class ProductDetailApiView(generics.RetrieveAPIView):
     queryset = Product.objects.all()
     serializer_class = ProductSerializer
-    # permission_classes = [IsAuthenticated]
-
-    def get(self, request, *args, **kwargs):
-        return self.retrieve(request, *args, **kwargs)
 
 
-class OrderListApiView(mixins.ListModelMixin, generics.GenericAPIView):
+class OrderListApiView(generics.ListAPIView):
     queryset = Order.objects.prefetch_related(
         "items__product",
     )
     serializer_class = OrderSerializer
-    # permission_classes = [IsAuthenticated]
 
-    def get(self, request, *args, **kwargs):
-        return self.list(request, *args, **kwargs)
+
+class ProductInfoListApiView(APIView):
+    def get(self, request):
+        products = Product.objects.all()
+        serializer = ProductInfoSerializer(
+            {
+                "products": products,
+                "count": len(products),
+                "max_price": products.aggregate(max_price=Max("price"))["max_price"],
+            }
+        )
+        return Response(serializer.data)
+
+
+# Generic Views + Mixins
+
+# class ProductListApiView(
+#     mixins.ListModelMixin,
+#     generics.GenericAPIView,
+# ):
+#     queryset = Product.objects.all()
+#     serializer_class = ProductSerializer
+#     # permission_classes = [IsAuthenticated]
+
+#     def get(self, request, *args, **kwargs):
+#         return self.list(request, *args, **kwargs)
+
+
+# class ProductDetailApiView(generics.GenericAPIView, mixins.RetrieveModelMixin):
+#     queryset = Product.objects.all()
+#     serializer_class = ProductSerializer
+#     # permission_classes = [IsAuthenticated]
+
+#     def get(self, request, *args, **kwargs):
+#         return self.retrieve(request, *args, **kwargs)
+
+
+# """
+# Deprecated Code: ProductCreateApiView
+# """
+# # class ProductCreateApiView(generics.CreateAPIView):
+# #     model = Product
+# #     serializer_class = ProductSerializer
+
+#     # def create(self, request, *args, **kwargs):
+#     #     print("Creating a new product with data:", request.data)
+#     #     return super().create(request, *args, **kwargs)
+
+
+# class OrderListApiView(mixins.ListModelMixin, generics.GenericAPIView):
+#     queryset = Order.objects.prefetch_related(
+#         "items__product",
+#     )
+#     serializer_class = OrderSerializer
+#     # permission_classes = [IsAuthenticated]
+
+#     def get(self, request, *args, **kwargs):
+#         return self.list(request, *args, **kwargs)
 
 
 class UserOrderListApiView(mixins.ListModelMixin, generics.GenericAPIView):
@@ -64,60 +120,26 @@ class UserOrderListApiView(mixins.ListModelMixin, generics.GenericAPIView):
         return self.list(request, *args, **kwargs)
 
 
-class ProductInfoListApiView(mixins.ListModelMixin, generics.GenericAPIView):
-    serializer_class = ProductInfoSerializer
-    # permission_classes = [IsAuthenticated]
+# class ProductInfoListApiView(mixins.ListModelMixin, generics.GenericAPIView):
+#     serializer_class = ProductInfoSerializer
+#     # permission_classes = [IsAuthenticated]
 
-    def get_queryset(self):
-        return Product.objects.all()
+#     def get_queryset(self):
+#         return Product.objects.all()
 
-    def list(self, request, *args, **kwargs):
-        queryset = self.get_queryset()
+#     def list(self, request, *args, **kwargs):
+#         queryset = self.get_queryset()
 
-        data = {
-            "products": queryset,
-            "count": len(queryset),
-            "max_price": queryset.aggregate(max_price=Max("price"))["max_price"],
-        }
-        serializer = self.get_serializer(data)
-        return Response(serializer.data)
-
-    def get(self, request, *args, **kwargs):
-        return self.list(request, *args, **kwargs)
-
-
-# Classed based Views
-
-
-#  class ProductListApiView(generics.ListAPIView):
-#     queryset = Product.objects.all()
-#     serializer_class = ProductSerializer
-#     # permission_classes = [IsAdminUser]
-
-
-# class ProductDetailApiView(generics.RetrieveAPIView):
-#     queryset = Product.objects.all()
-#     serializer_class = ProductSerializer
-
-
-# class OrderListApiView(generics.ListAPIView):
-#     queryset = Order.objects.prefetch_related(
-#         "items__product",
-#     )
-#     serializer_class = OrderSerializer
-
-
-# class ProductInfoListApiView(APIView):
-#     def get(self, request):
-#         products = Product.objects.all()
-#         serializer = ProductInfoSerializer(
-#             {
-#                 "products": products,
-#                 "count": len(products),
-#                 "max_price": products.aggregate(max_price=Max("price"))["max_price"],
-#             }
-#         )
+#         data = {
+#             "products": queryset,
+#             "count": len(queryset),
+#             "max_price": queryset.aggregate(max_price=Max("price"))["max_price"],
+#         }
+#         serializer = self.get_serializer(data)
 #         return Response(serializer.data)
+
+#     def get(self, request, *args, **kwargs):
+#         return self.list(request, *args, **kwargs)
 
 
 # Function Based Views
