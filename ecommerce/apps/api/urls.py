@@ -3,7 +3,8 @@ from . import views
 
 urlpatterns = [
     # On using Classed Based Views
-    path("products/", views.ProductListApiView.as_view()),
+    path("products/", views.ProductListCreateApiView.as_view()),
+    # path("products/create/", views.ProductCreateApiView.as_view()),
     path("products/info/", views.ProductInfoListApiView.as_view()),
     path("products/<int:pk>/", views.ProductDetailApiView.as_view()),
     path("orders/", views.OrderListApiView.as_view()),
