@@ -1,0 +1,14 @@
+GET http://localhost:8000/products/ HTTP/1.1
+
+###
+
+POST http://localhost:8000/products/ HTTP/1.1
+Content-Type: application/json
+Authorization: Bearer your_token_here
+
+{
+   "name": "Television",
+   "description": "A 50-inch 4K UHD Smart TV",
+   "price": "499.99",
+   "stock": 30
+}
