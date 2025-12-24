@@ -35,9 +35,10 @@ class ProductListCreateApiView(generics.ListCreateAPIView):
         return super().get_permissions()
 
 
-class ProductDetailApiView(generics.RetrieveAPIView):
+class ProductRetrieveUpdateDestroyApiView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Product.objects.all()
     serializer_class = ProductSerializer
+    lookup_url_kwarg = 'product_id'
 
 
 class OrderListApiView(generics.ListAPIView):
@@ -58,6 +59,7 @@ class ProductInfoListApiView(APIView):
             }
         )
         return Response(serializer.data)
+    
 
 
 # Generic Views + Mixins
