@@ -1,7 +1,9 @@
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404
 from django.db.models import Max
+from django_filters.rest_framework import DjangoFilterBackend
 from silk.profiling.profiler import silk_profile
+from django_filters.rest_framework import DjangoFilterBackend
 
 from apps.api.serializers import (
     ProductSerializer,
@@ -9,11 +11,15 @@ from apps.api.serializers import (
     ProductInfoSerializer,
 )
 from apps.api.models import Product, Order
+from apps.api.filters import ProductFilter, InStockFilterBackend
+
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
 from rest_framework import generics, mixins
 from rest_framework.permissions import IsAuthenticated, IsAdminUser, AllowAny
 from rest_framework.views import APIView
+from rest_framework import filters
+
 
 # Classed based Views
 
@@ -23,6 +29,16 @@ class ProductListCreateApiView(generics.ListCreateAPIView):
 
     queryset = Product.objects.all()
     serializer_class = ProductSerializer
+    # filterset_fields = ["name", "price"]
+    filterset_class = ProductFilter
+    filter_backends = [
+        filters.SearchFilter,
+        filters.OrderingFilter,
+        DjangoFilterBackend,
+        InStockFilterBackend,
+    ]
+    search_fields = ["name", "description"]
+    ordering_fields = ["name", "price"]
 
     """Customising permission to allow only authenticated users to create products,
     while allowing anyone to view the list of products.
