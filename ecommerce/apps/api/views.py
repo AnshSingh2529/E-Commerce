@@ -38,7 +38,13 @@ class ProductListCreateApiView(generics.ListCreateAPIView):
 class ProductRetrieveUpdateDestroyApiView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Product.objects.all()
     serializer_class = ProductSerializer
-    lookup_url_kwarg = 'product_id'
+    lookup_url_kwarg = "product_id"
+
+    def get_permissions(self):
+        self.permission_classes = [AllowAny]
+        if self.request.method in ["PUT", "PATCH", "DELETE"]:
+            self.permission_classes = [IsAdminUser]
+        return super().get_permissions()
 
 
 class OrderListApiView(generics.ListAPIView):
@@ -59,7 +65,6 @@ class ProductInfoListApiView(APIView):
             }
         )
         return Response(serializer.data)
-    
 
 
 # Generic Views + Mixins
