@@ -29,5 +29,5 @@ class UserOrderTestCase(TestCase):
     def test_user_order_endpoint_requires_authentication(self):
         response = self.client.get(reverse("user-orders"))
         self.assertEqual(
-            response.status_code, status.HTTP_403_FORBIDDEN
+            response.status_code, status.HTTP_401_UNAUTHORIZED
         )  # Forbidden for unauthenticated users
