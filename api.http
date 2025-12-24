@@ -2,9 +2,31 @@ GET http://localhost:8000/products/ HTTP/1.1
 
 ###
 
+GET http://localhost:8000/user-orders/ HTTP/1.1
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzY2NTU4MTg0LCJpYXQiOjE3NjY1NTc4ODQsImp0aSI6IjNjMzZmNzcyYTVlNzRhYjNiNzA2NTcxOTUwYjViNzFlIiwidXNlcl9pZCI6IjEifQ.732Fyv8i3l86DIAxi1MGT3LjKttGFTex5PRaz2qPps8
+
+
+###
+GET http://localhost:8000/products/1/ HTTP/1.1
+###
+PUT http://localhost:8000/products/1/ HTTP/1.1
+Content-Type: application/json
+
+{
+   "name": "Product_1",
+   "description": "A 50-inch 4K UHD Smart TV",
+   "price": "3000.99",
+   "stock": 328
+}
+
+###
+DELETE  http://localhost:8000/products/1/ HTTP/1.1
+###
+
+
 POST http://localhost:8000/products/ HTTP/1.1
 Content-Type: application/json
-Authorization: Bearer your_token_here
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzY2NTU4MTg0LCJpYXQiOjE3NjY1NTc4ODQsImp0aSI6IjNjMzZmNzcyYTVlNzRhYjNiNzA2NTcxOTUwYjViNzFlIiwidXNlcl9pZCI6IjEifQ.732Fyv8i3l86DIAxi1MGT3LjKttGFTex5PRaz2qPps8
 
 {
    "name": "Television",
@@ -12,3 +34,35 @@ Authorization: Bearer your_token_here
    "price": "499.99",
    "stock": 30
 }
+
+###
+
+
+POST http://localhost:8000/api/token/ HTTP/1.1
+Content-Type: application/json
+
+{
+    "username": "admin",
+    "password": "test"
+}
+
+###
+
+POST http://localhost:8000/api/token/ HTTP/1.1
+Content-Type: application/json
+
+{
+    "username": "anshsingh25",
+    "password": "test@123"
+}
+
+###
+
+POST http://localhost:8000/api/token/refresh/ HTTP/1.1
+Content-Type: application/json
+
+{
+   "refresh": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoicmVmcmVzaCIsImV4cCI6MTc2NjY0NDk0MCwiaWF0IjoxNzY2NTU4NTQwLCJqdGkiOiI0ZGE0OGI2YmUxMzg0YjUxODllYTIxNDg3N2U3ZGJjMSIsInVzZXJfaWQiOiI0In0._EvCDegSy9yZESxh7a5DmjIDEwtbI3AOjNUZFW-4aps" 
+}
+
+###
