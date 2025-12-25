@@ -1,25 +1,24 @@
+from django.db.models import Max
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404
-from django.db.models import Max
-from django_filters.rest_framework import DjangoFilterBackend
-from silk.profiling.profiler import silk_profile
 from django_filters.rest_framework import DjangoFilterBackend
 
+# ViewSets
+from rest_framework import filters, generics, mixins, viewsets
+from rest_framework.decorators import api_view, action
+from rest_framework.pagination import PageNumberPagination
+from rest_framework.permissions import AllowAny, IsAdminUser, IsAuthenticated
+from rest_framework.response import Response
+from rest_framework.views import APIView
+from silk.profiling.profiler import silk_profile
+
+from apps.api.filters import InStockFilterBackend, OrderFilter, ProductFilter
+from apps.api.models import Order, Product
 from apps.api.serializers import (
-    ProductSerializer,
     OrderSerializer,
     ProductInfoSerializer,
+    ProductSerializer,
 )
-from apps.api.models import Product, Order
-from apps.api.filters import ProductFilter, InStockFilterBackend
-
-from rest_framework.response import Response
-from rest_framework.decorators import api_view
-from rest_framework import generics, mixins
-from rest_framework.permissions import IsAuthenticated, IsAdminUser, AllowAny
-from rest_framework.views import APIView
-from rest_framework import filters
-
 
 # Classed based Views
 
@@ -27,7 +26,7 @@ from rest_framework import filters
 class ProductListCreateApiView(generics.ListCreateAPIView):
     """Class-based view for listing and creating products."""
 
-    queryset = Product.objects.all()
+    queryset = Product.objects.order_by("pk")
     serializer_class = ProductSerializer
     # filterset_fields = ["name", "price"]
     filterset_class = ProductFilter
@@ -39,6 +38,10 @@ class ProductListCreateApiView(generics.ListCreateAPIView):
     ]
     search_fields = ["name", "description"]
     ordering_fields = ["name", "price"]
+    pagination_class = PageNumberPagination
+    pagination_class.page_size = 2
+    pagination_class.page_size_query_param = "size"
+    pagination_class.max_page_size = 5
 
     """Customising permission to allow only authenticated users to create products,
     while allowing anyone to view the list of products.
@@ -63,11 +66,11 @@ class ProductRetrieveUpdateDestroyApiView(generics.RetrieveUpdateDestroyAPIView)
         return super().get_permissions()
 
 
-class OrderListApiView(generics.ListAPIView):
-    queryset = Order.objects.prefetch_related(
-        "items__product",
-    )
-    serializer_class = OrderSerializer
+# class OrderListApiView(generics.ListAPIView):
+#     queryset = Order.objects.prefetch_related(
+#         "items__product",
+#     )
+#     serializer_class = OrderSerializer
 
 
 class ProductInfoListApiView(APIView):
@@ -82,54 +85,49 @@ class ProductInfoListApiView(APIView):
         )
         return Response(serializer.data)
 
+    # Generic Views + Mixins
 
-# Generic Views + Mixins
+    # class ProductListApiView(
+    #     mixins.ListModelMixin,
+    #     generics.GenericAPIView,
+    # ):
+    #     queryset = Product.objects.all()
+    #     serializer_class = ProductSerializer
+    #     # permission_classes = [IsAuthenticated]
 
-# class ProductListApiView(
-#     mixins.ListModelMixin,
-#     generics.GenericAPIView,
-# ):
-#     queryset = Product.objects.all()
-#     serializer_class = ProductSerializer
-#     # permission_classes = [IsAuthenticated]
+    #     def get(self, request, *args, **kwargs):
+    #         return self.list(request, *args, **kwargs)
 
-#     def get(self, request, *args, **kwargs):
-#         return self.list(request, *args, **kwargs)
+    # class ProductDetailApiView(generics.GenericAPIView, mixins.RetrieveModelMixin):
+    #     queryset = Product.objects.all()
+    #     serializer_class = ProductSerializer
+    #     # permission_classes = [IsAuthenticated]
 
+    #     def get(self, request, *args, **kwargs):
+    #         return self.retrieve(request, *args, **kwargs)
 
-# class ProductDetailApiView(generics.GenericAPIView, mixins.RetrieveModelMixin):
-#     queryset = Product.objects.all()
-#     serializer_class = ProductSerializer
-#     # permission_classes = [IsAuthenticated]
+    # """
+    # Deprecated Code: ProductCreateApiView
+    # """
+    # # class ProductCreateApiView(generics.CreateAPIView):
+    # #     model = Product
+    # #     serializer_class = ProductSerializer
 
-#     def get(self, request, *args, **kwargs):
-#         return self.retrieve(request, *args, **kwargs)
+    #     # def create(self, request, *args, **kwargs):
+    #     #     print("Creating a new product with data:", request.data)
+    #     #     return super().create(request, *args, **kwargs)
 
+    # class OrderListApiView(mixins.ListModelMixin, generics.GenericAPIView):
+    #     queryset = Order.objects.prefetch_related(
+    #         "items__product",
+    #     )
+    #     serializer_class = OrderSerializer
+    #     # permission_classes = [IsAuthenticated]
 
-# """
-# Deprecated Code: ProductCreateApiView
-# """
-# # class ProductCreateApiView(generics.CreateAPIView):
-# #     model = Product
-# #     serializer_class = ProductSerializer
+    #     def get(self, request, *args, **kwargs):
+    #         return self.list(request, *args, **kwargs)
 
-#     # def create(self, request, *args, **kwargs):
-#     #     print("Creating a new product with data:", request.data)
-#     #     return super().create(request, *args, **kwargs)
-
-
-# class OrderListApiView(mixins.ListModelMixin, generics.GenericAPIView):
-#     queryset = Order.objects.prefetch_related(
-#         "items__product",
-#     )
-#     serializer_class = OrderSerializer
-#     # permission_classes = [IsAuthenticated]
-
-#     def get(self, request, *args, **kwargs):
-#         return self.list(request, *args, **kwargs)
-
-
-class UserOrderListApiView(mixins.ListModelMixin, generics.GenericAPIView):
+    # class UserOrderListApiView(mixins.ListModelMixin, generics.GenericAPIView):
     queryset = Order.objects.prefetch_related(
         "items__product",
     )
@@ -202,3 +200,32 @@ class UserOrderListApiView(mixins.ListModelMixin, generics.GenericAPIView):
 #         }
 #     )
 #     return Response(serializer.data)
+
+
+# Views For Orders using ViewSets
+
+
+class OrderViewSet(viewsets.ModelViewSet):
+    queryset = Order.objects.prefetch_related("items__product")
+    serializer_class = OrderSerializer
+    permission_classes = [IsAuthenticated]
+    pagination_class = None
+    filter_backends = [DjangoFilterBackend]
+    filterset_class = OrderFilter
+
+    def get_queryset(self):
+        qs = super().get_queryset()
+        if not self.request.user.is_staff:
+            qs = qs.filter(user=self.request.user)
+        return qs
+
+    @action(
+        detail=False,
+        methods=["get"],
+        url_path="user-orders",
+        permission_classes=[IsAuthenticated],
+    )
+    def user_order(self, request):
+        self.get_queryset().filter(user=request.user)
+        serializer = self.get_serializer(self.queryset, many=True)
+        return Response(serializer.data)
