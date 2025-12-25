@@ -48,6 +48,7 @@ class OrderItemSerializer(serializers.ModelSerializer):
 
 
 class OrderSerializer(serializers.ModelSerializer):
+    order_id = serializers.UUIDField(read_only=True)
     items = OrderItemSerializer(
         many=True, read_only=True
     )  # if you don't use the structure it will only provide the product ids and quantity only
