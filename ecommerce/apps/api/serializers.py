@@ -33,7 +33,9 @@ class ProductSerializer(serializers.ModelSerializer):
 class OrderItemSerializer(serializers.ModelSerializer):
     # product = ProductSerializer() # For return the whole product info..
     product_name = serializers.CharField(source="product.name")
-    product_price = serializers.DecimalField(max_digits=10, decimal_places=2, source="product.price")
+    product_price = serializers.DecimalField(
+        max_digits=10, decimal_places=2, source="product.price"
+    )
     product_description = serializers.CharField(source="product.description")
 
     class Meta:
@@ -43,7 +45,7 @@ class OrderItemSerializer(serializers.ModelSerializer):
             "product_price",
             "product_description",
             "quantity",
-            "item_subtotal"
+            "item_subtotal",
         )
 
 
@@ -68,6 +70,37 @@ class OrderSerializer(serializers.ModelSerializer):
             "items",
             "total_price",
         )
+
+
+class OrderCreateSerializer(serializers.ModelSerializer):
+    class OrderItemCreateSerializer(serializers.ModelSerializer):
+        class Meta:
+            model = OrderItem
+            fields = ["product", "quantity"]
+
+    items = OrderItemCreateSerializer(many=True)
+    total_price = serializers.SerializerMethodField(method_name="total_order_price")
+
+    def total_order_price(self, obj):
+        order_items = obj.items.all()
+        return sum(order_item.item_subtotal for order_item in order_items)
+
+    def create(self, validated_data):
+        orderitem_data = validated_data.pop("items")
+        order = Order.objects.create(**validated_data)
+        for item in orderitem_data:
+            OrderItem.objects.create(order=order, **item)
+        return order
+
+    class Meta:
+        model = Order
+        fields = (
+            "user",
+            "status",
+            "items",
+            "total_price",
+        )
+
 
 class ProductInfoSerializer(serializers.Serializer):
     # get all product, count of products, max price

@@ -18,6 +18,7 @@ from apps.api.serializers import (
     OrderSerializer,
     ProductInfoSerializer,
     ProductSerializer,
+    OrderCreateSerializer,
 )
 
 # Classed based Views
@@ -212,6 +213,11 @@ class OrderViewSet(viewsets.ModelViewSet):
     pagination_class = None
     filter_backends = [DjangoFilterBackend]
     filterset_class = OrderFilter
+
+    def get_serializer_class(self):
+        if self.action == "create":
+            return OrderCreateSerializer
+        return super().get_serializer_class()
 
     def get_queryset(self):
         qs = super().get_queryset()
